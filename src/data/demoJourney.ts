@@ -1,135 +1,227 @@
-import { Journey, RouteExperience } from '../domain/journey.types';
+import { Journey, Route, LocationPoint, SafeStop } from '../domain/journey.types';
 import { GeminiRecommendation } from '../domain/recommendation.types';
 
-const currentTimestamp = new Date().setHours(16, 0, 0, 0); // 4:00 PM today
+const currentTimestamp = Date.now(); 
 
-export const demoRouteA: RouteExperience = {
-  id: 'route-a',
-  label: 'Route A',
-  durationMinutes: 30,
-  distanceKm: 12,
-  path: [
-    [25.6000, 85.1000],
-    [25.6100, 85.1200],
-    [25.6200, 85.1400],
-  ],
-  segments: [
-    {
-      id: 'a-1',
-      path: [[25.6000, 85.1000], [25.6100, 85.1200]],
-      startMinute: 0,
-      endMinute: 10,
-      weather: 'CLEAR',
-      hazard: 'NONE',
-      arrivalTime: currentTimestamp + 0 * 60000,
-      exposureLevel: 'LOW',
-    },
-    {
-      id: 'a-2',
-      path: [[25.6100, 85.1200], [25.6200, 85.1400]],
-      startMinute: 10,
-      endMinute: 30,
-      weather: 'HEAVY_RAIN',
-      hazard: 'SEVERE_RAIN',
-      arrivalTime: currentTimestamp + 10 * 60000,
-      exposureLevel: 'HIGH',
-    },
-  ],
-  exposure: {
-    rainMinutes: 21,
-    heavyRainMinutes: 21,
-    heatMinutes: 0,
-    windMinutes: 0,
-    lowVisibilityMinutes: 5,
-    waterloggingRisk: 'High',
-    overallExposureDescription: 'High weather impact',
-  },
-  arrivalCondition: 'Heavy rain',
-  tradeoffs: ['Fastest route', 'High rain exposure'],
-  source: 'DEMO',
+export const demoOrigin: LocationPoint = {
+  name: 'Home',
+  lat: 28.61,
+  lng: 77.21,
+  source: 'demo'
 };
 
-export const demoRouteB: RouteExperience = {
-  id: 'route-b',
-  label: 'Route B',
-  durationMinutes: 35,
-  distanceKm: 14,
+export const demoDestination: LocationPoint = {
+  name: 'Office',
+  lat: 28.62,
+  lng: 77.23,
+  source: 'demo'
+};
+
+export const demoRouteA: Route = {
+  id: 'route-a',
+  label: 'Route A',
+  routeLabels: ['Fastest', 'High rain exposure'],
+  distanceMeters: 8200,
+  durationSeconds: 28 * 60,
   path: [
-    [25.6000, 85.1000],
-    [25.5900, 85.1200],
-    [25.6200, 85.1400],
+    [28.61, 77.21],
+    [28.615, 77.22],
+    [28.62, 77.23],
   ],
-  segments: [
+  weatherSegments: [
     {
-      id: 'b-1',
-      path: [[25.6000, 85.1000], [25.5900, 85.1200]],
-      startMinute: 0,
-      endMinute: 15,
-      weather: 'CLEAR',
-      hazard: 'NONE',
-      arrivalTime: currentTimestamp + 0 * 60000,
-      exposureLevel: 'LOW',
+      routeId: 'route-a',
+      segmentStartDistance: 0,
+      segmentEndDistance: 3000,
+      segmentStartTime: currentTimestamp,
+      segmentEndTime: currentTimestamp + 10 * 60000,
+      location: { lat: 28.612, lng: 77.215 },
+      condition: 'CLEAR',
+      precipitationProbability: 10,
+      precipitationMm: 0,
+      intensity: 'none',
+      temperatureC: 30,
+      windKph: 10,
+      visibilityKm: 10,
+      source: 'demo',
+      forecastGeneratedAt: currentTimestamp
     },
     {
-      id: 'b-2',
-      path: [[25.5900, 85.1200], [25.6200, 85.1400]],
-      startMinute: 15,
-      endMinute: 35,
-      weather: 'LIGHT_RAIN',
-      hazard: 'NONE',
-      arrivalTime: currentTimestamp + 15 * 60000,
-      exposureLevel: 'LOW',
-    },
+      routeId: 'route-a',
+      segmentStartDistance: 3000,
+      segmentEndDistance: 8200,
+      segmentStartTime: currentTimestamp + 10 * 60000,
+      segmentEndTime: currentTimestamp + 28 * 60000,
+      location: { lat: 28.618, lng: 77.225 },
+      condition: 'HEAVY_RAIN',
+      precipitationProbability: 95,
+      precipitationMm: 20,
+      intensity: 'heavy',
+      temperatureC: 25,
+      windKph: 15,
+      visibilityKm: 2,
+      source: 'demo',
+      forecastGeneratedAt: currentTimestamp
+    }
   ],
   exposure: {
-    rainMinutes: 20,
-    heavyRainMinutes: 4,
-    heatMinutes: 0,
-    windMinutes: 0,
-    lowVisibilityMinutes: 0,
-    waterloggingRisk: 'Low',
-    overallExposureDescription: 'Lower weather impact',
+    totalJourneyMinutes: 28,
+    expectedRainExposureMinutes: 18,
+    expectedHeavyRainExposureMinutes: 14,
+    expectedLowVisibilityMinutes: 6,
+    expectedStrongWindExposureMinutes: 0,
+    expectedHeatExposureMinutes: 0,
+    severeAlertExposureMinutes: 0,
+    combinedExposureScore: 72,
+    majorExposureWindows: ['Heavy rain expected between min 10 and 28'],
   },
-  arrivalCondition: 'Clear',
-  tradeoffs: ['+5 min', 'Avoids most heavy rain'],
-  source: 'DEMO',
+  source: 'demo',
+};
+
+export const demoRouteB: Route = {
+  id: 'route-b',
+  label: 'Route B',
+  routeLabels: ['+5 min', 'Avoids most heavy rain'],
+  distanceMeters: 9000,
+  durationSeconds: 33 * 60,
+  path: [
+    [28.61, 77.21],
+    [28.60, 77.22],
+    [28.62, 77.23],
+  ],
+  weatherSegments: [
+    {
+      routeId: 'route-b',
+      segmentStartDistance: 0,
+      segmentEndDistance: 5000,
+      segmentStartTime: currentTimestamp,
+      segmentEndTime: currentTimestamp + 15 * 60000,
+      location: { lat: 28.605, lng: 77.215 },
+      condition: 'CLEAR',
+      precipitationProbability: 10,
+      precipitationMm: 0,
+      intensity: 'none',
+      temperatureC: 30,
+      windKph: 10,
+      visibilityKm: 10,
+      source: 'demo',
+      forecastGeneratedAt: currentTimestamp
+    },
+    {
+      routeId: 'route-b',
+      segmentStartDistance: 5000,
+      segmentEndDistance: 9000,
+      segmentStartTime: currentTimestamp + 15 * 60000,
+      segmentEndTime: currentTimestamp + 33 * 60000,
+      location: { lat: 28.61, lng: 77.225 },
+      condition: 'LIGHT_RAIN',
+      precipitationProbability: 60,
+      precipitationMm: 2,
+      intensity: 'light',
+      temperatureC: 28,
+      windKph: 12,
+      visibilityKm: 8,
+      source: 'demo',
+      forecastGeneratedAt: currentTimestamp
+    }
+  ],
+  exposure: {
+    totalJourneyMinutes: 33,
+    expectedRainExposureMinutes: 18,
+    expectedHeavyRainExposureMinutes: 3,
+    expectedLowVisibilityMinutes: 2,
+    expectedStrongWindExposureMinutes: 0,
+    expectedHeatExposureMinutes: 0,
+    severeAlertExposureMinutes: 0,
+    combinedExposureScore: 31,
+    majorExposureWindows: ['Light rain expected from min 15'],
+  },
+  source: 'demo',
+};
+
+export const demoGeminiRecommendation: GeminiRecommendation = {
+  recommendedRouteId: 'route-b',
+  headline: 'Route B Recommended',
+  explanation: 'Route B reduces expected heavy-rain exposure with only a 5-minute travel-time increase.',
+  reasons: ['+5 minutes travel time', '11 minutes lower expected heavy-rain exposure', 'Balanced preference'],
+  userPreference: 'Balanced',
+  evidenceReferences: ['route-a', 'route-b'],
+  actions: ['Take Route B', 'Wait 10 min'],
+  voiceSummary: 'Route B adds about 5 minutes but reduces expected heavy-rain exposure from roughly 14 minutes to 3 minutes. Want to take Route B?',
+  confidenceLabel: 'high',
+  uncertainty: 'Forecast conditions can change.',
+  advisoryOnly: true,
+  generatedAt: Date.now(),
+};
+
+export const demoSafeStop: SafeStop = {
+  id: 'stop-1',
+  name: 'City Mall Covered Parking',
+  primaryType: 'parking',
+  location: { lat: 28.615, lng: 77.220 },
+  distanceMeters: 1300,
+  routeAlignedScore: 90,
+  estimatedTravelTimeMinutes: 4,
+  source: 'demo',
+  reasons: ['Covered stop before predicted heavy rain zone']
 };
 
 export const demoJourney: Journey = {
-  id: 'demo-journey-1',
-  origin: 'Home',
-  destination: 'Office',
-  mode: 'TWO_WHEELER',
+  journeyId: 'demo-journey-1',
+  createdAt: currentTimestamp,
+  origin: demoOrigin,
+  destination: demoDestination,
+  travelMode: 'TWO_WHEELER',
   preference: 'BALANCED',
   departureTime: currentTimestamp,
   routes: [demoRouteA, demoRouteB],
   selectedRouteId: 'route-b',
-  alerts: [],
-  smartStops: [
+  recommendation: demoGeminiRecommendation,
+  journeyTwin: [
     {
-      id: 'stop-1',
-      name: 'City Mall Covered Parking',
-      category: 'Covered parking',
-      distanceKm: 1.3,
-      etaMinutes: 4,
-      covered: true,
-      coordinates: [25.6050, 85.1100],
-      reason: 'Covered stop before predicted heavy rain zone'
+      id: 'event-1',
+      timestamp: currentTimestamp,
+      location: demoOrigin,
+      condition: 'CLEAR',
+      visibilityKm: 10,
+      exposureState: 'Clear',
+      reason: 'Departure'
+    },
+    {
+      id: 'event-2',
+      timestamp: currentTimestamp + 10 * 60000,
+      location: { lat: 28.612, lng: 77.215 },
+      condition: 'LIGHT_RAIN',
+      visibilityKm: 8,
+      exposureState: 'Light Rain',
+      reason: 'En Route'
+    },
+    {
+      id: 'event-3',
+      timestamp: currentTimestamp + 20 * 60000,
+      location: { lat: 28.618, lng: 77.225 },
+      condition: 'HEAVY_RAIN',
+      visibilityKm: 2,
+      exposureState: 'Heavy Rain',
+      reason: 'High Exposure Zone'
+    },
+    {
+      id: 'event-4',
+      timestamp: currentTimestamp + 28 * 60000,
+      location: demoDestination,
+      condition: 'HEAVY_RAIN',
+      visibilityKm: 2,
+      exposureState: 'Heavy Rain',
+      reason: 'Arrival'
     }
   ],
-  currentState: 'ANALYZED',
-  dataMode: 'DEMO',
-  updatedAt: Date.now(),
-};
-
-export const demoGeminiRecommendation: GeminiRecommendation = {
-  summary: 'Route B reduces expected heavy-rain exposure with only a 5-minute travel-time increase.',
-  recommendation: 'Take Route B',
-  reasonCodes: ['lower_rain_exposure', 'only_5_minutes_longer'],
-  tradeoffs: ['adds_5_minutes'],
-  uncertainty: 'Forecast conditions can change.',
-  actions: ['Take Route B', 'Wait 10 min', 'Keep Route A'],
-  voiceSummary: 'You can leave now, but the current route reaches the heavy-rain zone in about 18 minutes. Route B adds about 5 minutes and reduces expected heavy-rain exposure from roughly 21 minutes to 4 minutes. Want to take Route B?',
-  confidenceLabel: 'High',
-  generatedAt: Date.now(),
+  incidents: [],
+  safeStops: [demoSafeStop],
+  freshness: {
+    sourceFetchedAt: currentTimestamp,
+    staleAfter: currentTimestamp + 5 * 60000,
+    sourceMode: 'demo'
+  },
+  sourceMode: 'demo',
+  state: 'ANALYZED'
 };

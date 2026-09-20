@@ -1,30 +1,37 @@
 import { RoutingProvider, WeatherProvider, PlacesProvider, GeminiProvider } from './interfaces';
-import { RouteExperience, TravelMode, SmartStop } from '@/domain/journey.types';
-import { WeatherPoint } from '@/domain/weather.types';
+import { Route, LocationPoint, SafeStop, JourneyRequest } from '@/domain/journey.types';
 import { GeminiRecommendation } from '@/domain/recommendation.types';
-import { demoRouteA, demoRouteB, demoGeminiRecommendation, demoJourney } from '@/data/demoJourney';
+import { demoRouteA, demoRouteB, demoGeminiRecommendation, demoSafeStop, demoOrigin, demoDestination } from '@/data/demoJourney';
 
 export class DemoRoutingProvider implements RoutingProvider {
-  async getRoutes(origin: string, destination: string, mode: TravelMode): Promise<RouteExperience[]> {
+  async computeRoutes(request: JourneyRequest): Promise<Route[]> {
+    return [demoRouteA, demoRouteB];
+  }
+  async refreshRoutes(request: JourneyRequest): Promise<Route[]> {
     return [demoRouteA, demoRouteB];
   }
 }
 
 export class DemoWeatherProvider implements WeatherProvider {
-  async getHourlyForecast(lat: number, lng: number): Promise<WeatherPoint[]> {
-    // Return dummy points for demo
-    return [];
+  async getForecast(lat: number, lng: number): Promise<any> {
+    return {};
   }
 }
 
 export class DemoPlacesProvider implements PlacesProvider {
-  async findSmartStops(lat: number, lng: number, categories: string[]): Promise<SmartStop[]> {
-    return demoJourney.smartStops;
+  async autocomplete(query: string, context?: any): Promise<any[]> {
+    return [demoOrigin, demoDestination];
+  }
+  async getPlaceDetails(placeId: string): Promise<LocationPoint> {
+    return demoDestination;
+  }
+  async nearbySearch(center: {lat: number, lng: number}, types: string[], radius: number): Promise<SafeStop[]> {
+    return [demoSafeStop];
   }
 }
 
 export class DemoGeminiProvider implements GeminiProvider {
-  async generateStructuredRecommendation(context: any): Promise<GeminiRecommendation> {
+  async generateStructuredRecommendation(evidence: any): Promise<GeminiRecommendation> {
     return demoGeminiRecommendation;
   }
 }

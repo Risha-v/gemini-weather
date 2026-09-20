@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { Journey, RouteExperience, JourneyState, DataSource } from '../domain/journey.types';
+import { Journey, JourneyState } from '../domain/journey.types';
 import { demoJourney } from '../data/demoJourney';
 
 type Action =
@@ -10,6 +10,7 @@ type Action =
   | { type: 'SELECT_ROUTE'; payload: string }
   | { type: 'ADVANCE_TIME'; payload: number } // minutes
   | { type: 'TRIGGER_EMERGENCY'; payload: { stopId: string, reason: string } }
+  | { type: 'UPDATE_SETUP'; payload: Partial<Journey> }
   | { type: 'RESET_DEMO' };
 
 interface JourneyContextType {
@@ -25,8 +26,10 @@ function journeyReducer(state: Journey | null, action: Action): Journey | null {
   switch (action.type) {
     case 'SET_JOURNEY':
       return action.payload;
+    case 'UPDATE_SETUP':
+      return { ...state!, ...action.payload };
     case 'SET_STATE':
-      return { ...state!, currentState: action.payload };
+      return { ...state!, state: action.payload };
     case 'SELECT_ROUTE':
       return { ...state!, selectedRouteId: action.payload };
     case 'ADVANCE_TIME':
@@ -37,9 +40,9 @@ function journeyReducer(state: Journey | null, action: Action): Journey | null {
     case 'TRIGGER_EMERGENCY':
       return {
         ...state!,
-        currentState: 'EMERGENCY',
-        alerts: [
-          ...state!.alerts,
+        state: 'EMERGENCY_MODE',
+        incidents: [
+          ...state!.incidents,
           {
             type: 'EMERGENCY',
             message: action.payload.reason,
@@ -56,7 +59,7 @@ function journeyReducer(state: Journey | null, action: Action): Journey | null {
 
 const initialJourney: Journey = {
   ...demoJourney,
-  currentState: 'IDLE',
+  state: 'IDLE',
 };
 
 export function JourneyProvider({ children }: { children: ReactNode }) {

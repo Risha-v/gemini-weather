@@ -40,22 +40,22 @@ export default function RouteComparison() {
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="font-bold">{route.durationMinutes} min</div>
-                  <div className="text-xs text-slate-400">{route.distanceKm} km</div>
+                  <div className="font-bold">{Math.round(route.durationSeconds / 60)} min</div>
+                  <div className="text-xs text-slate-400">{(route.distanceMeters / 1000).toFixed(1)} km</div>
                 </div>
               </div>
               
               <div className="flex flex-col gap-2 mt-3">
                 <div className="flex items-center gap-2 text-sm">
-                  <CloudRain className={cn("w-4 h-4", route.exposure.heavyRainMinutes > 10 ? "text-red-400" : "text-blue-400")} />
-                  <span className={cn(route.exposure.heavyRainMinutes > 10 ? "text-red-300" : "text-blue-300")}>
-                    ~{route.exposure.heavyRainMinutes} min heavy rain
+                  <CloudRain className={cn("w-4 h-4", route.exposure.expectedHeavyRainExposureMinutes > 10 ? "text-red-400" : "text-blue-400")} />
+                  <span className={cn(route.exposure.expectedHeavyRainExposureMinutes > 10 ? "text-red-300" : "text-blue-300")}>
+                    ~{route.exposure.expectedHeavyRainExposureMinutes} min heavy rain
                   </span>
                 </div>
                 
-                {route.tradeoffs.length > 0 && (
+                {route.routeLabels && route.routeLabels.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {route.tradeoffs.map((tradeoff, i) => (
+                    {route.routeLabels.map((tradeoff, i) => (
                       <span key={i} className="px-2 py-1 bg-slate-800 rounded text-xs text-slate-300 border border-slate-700">
                         {tradeoff}
                       </span>

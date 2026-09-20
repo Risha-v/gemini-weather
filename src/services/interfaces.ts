@@ -1,17 +1,19 @@
-import { Journey, RouteExperience, WeatherCondition, TravelMode, SmartStop, DataSource } from '@/domain/journey.types';
-import { WeatherPoint } from '@/domain/weather.types';
+import { JourneyRequest, Route, LocationPoint, SafeStop, WeatherSegment } from '@/domain/journey.types';
 import { GeminiRecommendation } from '@/domain/recommendation.types';
 
 export interface RoutingProvider {
-  getRoutes(origin: string, destination: string, mode: TravelMode): Promise<RouteExperience[]>;
+  computeRoutes(request: JourneyRequest): Promise<Route[]>;
+  refreshRoutes(request: JourneyRequest): Promise<Route[]>;
 }
 
 export interface WeatherProvider {
-  getHourlyForecast(lat: number, lng: number): Promise<WeatherPoint[]>;
+  getForecast(lat: number, lng: number): Promise<any>;
 }
 
 export interface PlacesProvider {
-  findSmartStops(lat: number, lng: number, categories: string[]): Promise<SmartStop[]>;
+  autocomplete(query: string, context?: any): Promise<any[]>;
+  getPlaceDetails(placeId: string): Promise<LocationPoint>;
+  nearbySearch(center: {lat: number, lng: number}, types: string[], radius: number): Promise<SafeStop[]>;
 }
 
 export interface IncidentProvider {
@@ -19,5 +21,5 @@ export interface IncidentProvider {
 }
 
 export interface GeminiProvider {
-  generateStructuredRecommendation(context: any): Promise<GeminiRecommendation>;
+  generateStructuredRecommendation(evidence: any): Promise<GeminiRecommendation>;
 }

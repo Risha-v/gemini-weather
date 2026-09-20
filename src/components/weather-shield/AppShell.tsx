@@ -87,7 +87,7 @@ export default function AppShell() {
         </div>
       </header>
 
-      {journey.currentState === 'IDLE' ? (
+      {journey.state === 'IDLE' ? (
         <JourneySetup onPlayDemo={startAutoDemo} />
       ) : (
         <div className="flex flex-1 overflow-hidden relative">
@@ -99,25 +99,25 @@ export default function AppShell() {
               <div className="flex flex-col gap-2 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-400">From</span>
-                  <span className="font-semibold">{journey.origin}</span>
+                  <span className="font-semibold">{journey.origin.name}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-400">To</span>
-                  <span className="font-semibold">{journey.destination}</span>
+                  <span className="font-semibold">{journey.destination.name}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t border-slate-700/50">
                   <span className="text-slate-400">Mode</span>
-                  <span className="font-semibold">{journey.mode.replace('_', ' ')}</span>
+                  <span className="font-semibold">{journey.travelMode.replace('_', ' ')}</span>
                 </div>
               </div>
 
               {/* Emergency Banner */}
-              {journey.currentState === 'EMERGENCY' && (
+              {journey.state === 'EMERGENCY_MODE' && (
                 <EmergencyMode />
               )}
 
               {/* Normal Intelligence Panel */}
-              <div className={cn("transition-opacity duration-500", journey.currentState === 'EMERGENCY' ? "opacity-50 pointer-events-none" : "opacity-100")}>
+              <div className={cn("transition-opacity duration-500", journey.state === 'EMERGENCY_MODE' ? "opacity-50 pointer-events-none" : "opacity-100")}>
                 <div className="bg-slate-900/80 rounded-xl p-4 border border-slate-700/50 shadow-md mb-6">
                   <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2 flex justify-between">
                     <span>Your Route Forecast</span>

@@ -1,11 +1,14 @@
 export interface GeminiRecommendation {
-  summary: string;
-  recommendation: string;
-  reasonCodes: string[];
-  tradeoffs: string[];
-  uncertainty: string;
+  recommendedRouteId: string;
+  headline: string;
+  explanation: string;
+  reasons: string[];
+  userPreference: string;
+  evidenceReferences: string[];
   actions: string[];
+  confidenceLabel: 'high' | 'moderate' | 'limited';
+  uncertainty: string;
   voiceSummary: string;
-  confidenceLabel: string;
+  advisoryOnly: boolean;
   generatedAt: number;
 }

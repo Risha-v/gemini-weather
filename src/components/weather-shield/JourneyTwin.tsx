@@ -21,31 +21,7 @@ const getWeatherIcon = (condition: WeatherCondition, className: string) => {
 export default function JourneyTwin() {
   const { journey } = useJourney();
 
-  if (!journey) return null;
-
-  // Combine departure and arrival into a timeline
-  const selectedRoute = journey.routes.find(r => r.id === journey.selectedRouteId) || journey.routes[0];
-  
-  const timelinePoints = [
-    {
-      time: journey.departureTime,
-      label: 'Start',
-      condition: 'CLEAR' as WeatherCondition,
-      desc: 'Clear'
-    },
-    {
-      time: journey.departureTime + 15 * 60000,
-      label: 'En Route',
-      condition: selectedRoute.segments[1]?.weather || 'CLOUDY',
-      desc: selectedRoute.segments[1]?.weather === 'HEAVY_RAIN' ? 'Heavy Rain' : 'Cloudy'
-    },
-    {
-      time: journey.departureTime + selectedRoute.durationMinutes * 60000,
-      label: 'Arrive',
-      condition: selectedRoute.arrivalCondition === 'Heavy rain' ? 'HEAVY_RAIN' : 'CLEAR' as WeatherCondition,
-      desc: selectedRoute.arrivalCondition
-    }
-  ];
+  if (!journey || !journey.journeyTwin || journey.journeyTwin.length === 0) return null;
 
   return (
     <div className="bg-slate-900/90 backdrop-blur-md border-t border-slate-800 p-6 mx-4 mb-4 rounded-2xl shadow-2xl">
@@ -55,12 +31,12 @@ export default function JourneyTwin() {
         {/* Connecting line */}
         <div className="absolute top-4 left-10 right-10 h-1 bg-slate-700 z-0"></div>
         
-        {timelinePoints.map((point, index) => {
-          const date = new Date(point.time);
+        {journey.journeyTwin.map((point, index) => {
+          const date = new Date(point.timestamp);
           const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           
           return (
-            <div key={index} className="relative z-10 flex flex-col items-center gap-2">
+            <div key={point.id || index} className="relative z-10 flex flex-col items-center gap-2">
               <div className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center border-4 border-slate-900",
                 point.condition === 'HEAVY_RAIN' ? "bg-red-500" : 
@@ -70,12 +46,12 @@ export default function JourneyTwin() {
               </div>
               <div className="text-center">
                 <div className="font-bold">{timeString}</div>
-                <div className="text-xs text-slate-400">{point.label}</div>
+                <div className="text-xs text-slate-400">{point.reason || "En Route"}</div>
                 <div className={cn(
                   "text-xs font-medium mt-1",
                   point.condition === 'HEAVY_RAIN' ? "text-red-400" : "text-slate-300"
                 )}>
-                  {point.desc}
+                  {point.exposureState || "Clear"}
                 </div>
               </div>
             </div>

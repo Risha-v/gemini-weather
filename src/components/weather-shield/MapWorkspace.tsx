@@ -63,23 +63,27 @@ export default function MapWorkspace() {
         <div className="absolute" style={{ top: '600px', left: '200px', transform: 'translate(-50%, -50%)' }}>
           <div className="relative group cursor-pointer">
             <div className="absolute inset-0 bg-blue-500 rounded-full blur-md opacity-50 group-hover:opacity-100 transition-opacity" />
-            <div className="relative bg-slate-900 border-2 border-slate-700 w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-xs font-bold text-white">HOME</span>
+            <div className="relative bg-slate-900 border-2 border-slate-700 h-12 px-3 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-xs font-bold text-white uppercase whitespace-nowrap overflow-hidden max-w-[100px] text-ellipsis">
+                {journey.origin.name || 'START'}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Destination Marker */}
         <div className="absolute" style={{ top: '200px', left: '700px', transform: 'translate(-50%, -50%)' }}>
-          <div className={cn("relative group cursor-pointer transition-opacity duration-500", journey.currentState === 'EMERGENCY' ? 'opacity-40 scale-75' : 'opacity-100')}>
-            <div className="relative bg-slate-900 border-2 border-slate-700 w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
-               <span className="text-xs font-bold text-white">WORK</span>
+          <div className={cn("relative group cursor-pointer transition-opacity duration-500", journey.state === 'EMERGENCY_MODE' ? 'opacity-40 scale-75' : 'opacity-100')}>
+            <div className="relative bg-slate-900 border-2 border-slate-700 h-12 px-3 rounded-full flex items-center justify-center shadow-lg">
+               <span className="text-xs font-bold text-white uppercase whitespace-nowrap overflow-hidden max-w-[100px] text-ellipsis">
+                 {journey.destination.name || 'END'}
+               </span>
             </div>
           </div>
         </div>
 
         {/* Incident Marker (Emergency Mode) */}
-        {journey.currentState === 'EMERGENCY' && (
+        {journey.state === 'EMERGENCY_MODE' && (
           <>
             <div className="absolute" style={{ top: '400px', left: '450px', transform: 'translate(-50%, -50%)' }}>
                <div className="relative animate-bounce">
@@ -90,7 +94,7 @@ export default function MapWorkspace() {
             </div>
 
             {/* Safe Stop Marker */}
-            {journey.alerts.length > 0 && journey.smartStops.find(s => s.id === journey.alerts[journey.alerts.length - 1].recommendedStopId) && (
+            {journey.incidents.length > 0 && journey.safeStops.find(s => s.id === journey.incidents[journey.incidents.length - 1].recommendedStopId) && (
               <div className="absolute z-20" style={{ top: '350px', left: '550px', transform: 'translate(-50%, -50%)' }}>
                 <div className="relative group cursor-pointer animate-in zoom-in duration-500">
                   <div className="absolute inset-0 bg-green-500 rounded-full blur-md opacity-80 group-hover:opacity-100 transition-opacity animate-pulse" />

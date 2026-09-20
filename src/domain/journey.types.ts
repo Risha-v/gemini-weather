@@ -1,69 +1,133 @@
-export type TravelMode = 'TWO_WHEELER' | 'WALKING' | 'CYCLING' | 'DRIVING' | 'DELIVERY' | 'LONG_TRIP';
+export type TravelMode = 'TWO_WHEELER' | 'WALKING' | 'CYCLING' | 'DRIVING' | 'DELIVERY';
+import { GeminiRecommendation } from './recommendation.types';
 export type JourneyPreference = 'FASTEST' | 'BALANCED' | 'COMFORT' | 'CAUTIOUS';
-export type DataSource = 'DEMO' | 'MAPS' | 'WEATHER' | 'INCIDENT' | 'GEMINI' | 'USER';
+export type DataSource = 'demo' | 'live' | 'fallback' | 'calculated';
 export type HazardType = 'NONE' | 'FLOODING' | 'LOW_VISIBILITY' | 'EXTREME_HEAT' | 'STRONG_WIND' | 'SEVERE_RAIN';
 export type WeatherCondition = 'CLEAR' | 'CLOUDY' | 'LIGHT_RAIN' | 'MODERATE_RAIN' | 'HEAVY_RAIN' | 'STORM' | 'FOG' | 'HOT';
+export type JourneyState = 'IDLE' | 'ANALYZING' | 'ANALYZED' | 'NAVIGATING' | 'REFRESHING' | 'CONDITION_CHANGE_DETECTED' | 'REASSESSING' | 'EMERGENCY_MODE' | 'SAFE_STOP_SELECTED' | 'ERROR_RECOVERABLE';
 
-export interface RouteSegment {
-  id: string;
-  path: [number, number][];
-  startMinute: number;
-  endMinute: number;
-  weather: WeatherCondition;
-  hazard: HazardType;
-  incident?: string;
-  arrivalTime: number;
-  exposureLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+export type ProviderSource = 'live' | 'demo' | 'fallback' | 'calculated';
+
+export interface LocationPoint {
+  placeId?: string;
+  name: string;
+  address?: string;
+  lat: number;
+  lng: number;
+  source: 'places' | 'geolocation' | 'manual' | 'demo';
+}
+
+export interface JourneyRequest {
+  origin: LocationPoint;
+  destination: LocationPoint;
+  travelMode: TravelMode;
+  preference: JourneyPreference;
+  departureTime: number; // UTC timestamp or offset
+}
+
+export interface RoutePoint {
+  lat: number;
+  lng: number;
+  cumulativeDistanceMeters: number;
+  fractionOfRoute: number;
+  segmentId?: string;
+}
+
+export interface WeatherSegment {
+  routeId: string;
+  segmentStartDistance: number;
+  segmentEndDistance: number;
+  segmentStartTime: number;
+  segmentEndTime: number;
+  location: { lat: number; lng: number };
+  condition: WeatherCondition;
+  precipitationProbability: number;
+  precipitationMm: number;
+  intensity: "none" | "light" | "moderate" | "heavy";
+  temperatureC: number;
+  windKph: number;
+  visibilityKm: number;
+  alertSeverity?: string;
+  source: ProviderSource;
+  forecastGeneratedAt: number;
 }
 
 export interface ExposureSummary {
-  rainMinutes: number;
-  heavyRainMinutes: number;
-  heatMinutes: number;
-  windMinutes: number;
-  lowVisibilityMinutes: number;
-  waterloggingRisk: string;
-  overallExposureDescription: string;
+  totalJourneyMinutes: number;
+  expectedRainExposureMinutes: number;
+  expectedHeavyRainExposureMinutes: number;
+  expectedLowVisibilityMinutes: number;
+  expectedStrongWindExposureMinutes: number;
+  expectedHeatExposureMinutes: number;
+  severeAlertExposureMinutes: number;
+  combinedExposureScore: number;
+  majorExposureWindows: string[];
+  earliestMeaningfulWeatherEvent?: string;
 }
 
-export interface RouteExperience {
+export interface Route {
   id: string;
+  providerRouteId?: string;
   label: string;
-  durationMinutes: number;
-  distanceKm: number;
-  path: [number, number][];
-  segments: RouteSegment[];
+  routeLabels: string[];
+  distanceMeters: number;
+  durationSeconds: number;
+  path: [number, number][]; // Or LatLng literal array
+  legs?: any[]; // Route legs from Google Maps
+  weatherSegments: WeatherSegment[];
   exposure: ExposureSummary;
-  arrivalCondition: string;
-  tradeoffs: string[];
-  source: DataSource;
+  source: ProviderSource;
 }
 
-export type JourneyState = 'IDLE' | 'ANALYZING' | 'ANALYZED' | 'COMPARING' | 'WAITING_SIMULATION' | 'NAVIGATING' | 'CONDITIONS_CHANGED' | 'EMERGENCY' | 'SAFE_STOP_SELECTED' | 'DELIVERY_MODE' | 'ERROR_WITH_FALLBACK';
-
-export interface SmartStop {
+export interface SafeStop {
   id: string;
   name: string;
-  category: string;
-  distanceKm: number;
-  etaMinutes: number;
-  covered: boolean;
-  coordinates: [number, number];
-  reason?: string;
+  primaryType: string;
+  location: { lat: number, lng: number };
+  distanceMeters: number;
+  routeAlignedScore: number;
+  estimatedTravelTimeMinutes: number;
+  openingHours?: string;
+  source: ProviderSource;
+  reasons: string[];
+}
+
+export interface JourneyTwinEvent {
+  id: string;
+  timestamp: number;
+  elapsedJourneyMinutes?: number;
+  distanceFromOriginKm?: number;
+  location: { lat: number, lng: number };
+  condition: WeatherCondition;
+  temperatureC?: number;
+  precipitationMm?: number;
+  visibilityKm?: number;
+  exposureState: string;
+  reason: string;
+  routeSegmentId?: string;
 }
 
 export interface Journey {
-  id: string;
-  origin: string;
-  destination: string;
-  mode: TravelMode;
+  journeyId: string;
+  createdAt: number;
+  origin: LocationPoint;
+  destination: LocationPoint;
+  travelMode: TravelMode;
   preference: JourneyPreference;
   departureTime: number;
-  routes: RouteExperience[];
+  routes: Route[];
   selectedRouteId: string | null;
-  alerts: any[];
-  smartStops: SmartStop[];
-  currentState: JourneyState;
-  dataMode: DataSource;
-  updatedAt: number;
+  recommendation: GeminiRecommendation | null;
+  journeyTwin: JourneyTwinEvent[];
+  incidents: any[];
+  safeStops: SafeStop[];
+  freshness: {
+    sourceFetchedAt: number;
+    forecastValidFrom?: number;
+    forecastValidTo?: number;
+    staleAfter: number;
+    sourceMode: string;
+  };
+  sourceMode: 'demo' | 'live' | 'hybrid';
+  state: JourneyState;
 }

@@ -6,29 +6,39 @@ import { GeminiRecommendation } from '@/domain/recommendation.types';
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 const RecommendationZodSchema = z.object({
-  summary: z.string(),
-  recommendation: z.string(),
-  reasonCodes: z.array(z.string()),
-  tradeoffs: z.array(z.string()),
-  uncertainty: z.string(),
+  recommendedRouteId: z.string(),
+  headline: z.string(),
+  explanation: z.string(),
+  reasons: z.array(z.string()),
+  userPreference: z.string(),
+  evidenceReferences: z.array(z.string()),
   actions: z.array(z.string()),
+  confidenceLabel: z.enum(['high', 'moderate', 'limited']),
+  uncertainty: z.string(),
   voiceSummary: z.string(),
-  confidenceLabel: z.string(),
+  advisoryOnly: z.boolean()
 });
 
 const recommendationSchema: Schema = {
   type: Type.OBJECT,
   properties: {
-    summary: { type: Type.STRING },
-    recommendation: { type: Type.STRING },
-    reasonCodes: { type: Type.ARRAY, items: { type: Type.STRING } },
-    tradeoffs: { type: Type.ARRAY, items: { type: Type.STRING } },
-    uncertainty: { type: Type.STRING },
+    recommendedRouteId: { type: Type.STRING },
+    headline: { type: Type.STRING },
+    explanation: { type: Type.STRING },
+    reasons: { type: Type.ARRAY, items: { type: Type.STRING } },
+    userPreference: { type: Type.STRING },
+    evidenceReferences: { type: Type.ARRAY, items: { type: Type.STRING } },
     actions: { type: Type.ARRAY, items: { type: Type.STRING } },
+    confidenceLabel: { type: Type.STRING, description: "high, moderate, or limited" },
+    uncertainty: { type: Type.STRING },
     voiceSummary: { type: Type.STRING },
-    confidenceLabel: { type: Type.STRING },
+    advisoryOnly: { type: Type.BOOLEAN },
   },
-  required: ['summary', 'recommendation', 'reasonCodes', 'tradeoffs', 'uncertainty', 'actions', 'voiceSummary', 'confidenceLabel']
+  required: [
+    'recommendedRouteId', 'headline', 'explanation', 'reasons', 'userPreference', 
+    'evidenceReferences', 'actions', 'confidenceLabel', 'uncertainty', 
+    'voiceSummary', 'advisoryOnly'
+  ]
 };
 
 export async function POST(req: NextRequest) {

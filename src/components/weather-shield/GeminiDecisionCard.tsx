@@ -46,7 +46,7 @@ export default function GeminiDecisionCard() {
     fetchRecommendation();
     
     return () => { isMounted = false; };
-  }, [journey?.selectedRouteId, journey?.departureTime, journey?.currentState]);
+  }, [journey?.selectedRouteId, journey?.departureTime, journey?.state]);
 
   if (!journey) return null;
 
@@ -67,7 +67,7 @@ export default function GeminiDecisionCard() {
       </div>
       
       <p className="text-lg leading-snug font-medium text-slate-100 mb-4 transition-opacity duration-300" style={{ opacity: loading ? 0.5 : 1 }}>
-        {recommendation.summary}
+        {recommendation.explanation}
       </p>
       
       <div className="flex gap-2 mb-4">

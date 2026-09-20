@@ -8,7 +8,7 @@ export default function EmergencyMode() {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (journey?.currentState === 'EMERGENCY') {
+    if (journey?.state === 'EMERGENCY_MODE') {
       const timers = [
         setTimeout(() => setStep(1), 800),
         setTimeout(() => setStep(2), 1600),
@@ -18,12 +18,12 @@ export default function EmergencyMode() {
     } else {
       setStep(0);
     }
-  }, [journey?.currentState]);
+  }, [journey?.state]);
 
-  if (!journey || journey.currentState !== 'EMERGENCY') return null;
+  if (!journey || journey.state !== 'EMERGENCY_MODE') return null;
 
-  const currentAlert = journey.alerts[journey.alerts.length - 1];
-  const recommendedStop = journey.smartStops.find(s => s.id === currentAlert?.recommendedStopId);
+  const currentAlert = journey.incidents[journey.incidents.length - 1];
+  const recommendedStop = journey.safeStops.find(s => s.id === currentAlert?.recommendedStopId);
 
   return (
     <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 mb-6">
@@ -63,11 +63,11 @@ export default function EmergencyMode() {
             <div className="flex justify-between items-center mb-2">
               <span className="font-semibold text-green-400 uppercase tracking-wide">SAFE STOP</span>
               <span className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded">
-                {recommendedStop.category}
+                {recommendedStop.primaryType}
               </span>
             </div>
             <div className="text-sm text-slate-200 mb-4">
-              <span className="font-medium">{recommendedStop.name}</span> <span className="text-slate-500 mx-1">•</span> {recommendedStop.distanceKm} km
+              <span className="font-medium">{recommendedStop.name}</span> <span className="text-slate-500 mx-1">•</span> {(recommendedStop.distanceMeters / 1000).toFixed(1)} km
             </div>
             
             <button className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95">
@@ -79,13 +79,13 @@ export default function EmergencyMode() {
       </div>
       
       {/* Visual indicator of voice mode */}
-      {step >= 3 && (
+      {step >= 3 && recommendedStop && (
         <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-3 flex items-start gap-3 animate-in fade-in duration-500">
           <div className="bg-indigo-500/20 p-1.5 rounded-full mt-0.5">
             <Volume2 className="w-4 h-4 text-indigo-400" />
           </div>
           <p className="text-xs text-slate-300 leading-relaxed italic">
-            "Flooded road ahead. I found a covered stop {recommendedStop?.distanceKm} kilometers away."
+            "Flooded road ahead. I found a covered stop {(recommendedStop.distanceMeters / 1000).toFixed(1)} kilometers away."
           </p>
         </div>
       )}
