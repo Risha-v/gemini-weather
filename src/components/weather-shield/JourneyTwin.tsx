@@ -33,7 +33,31 @@ const getConditionText = (condition: WeatherCondition) => {
 export default function JourneyTwin() {
   const { journey } = useJourney();
 
-  if (!journey || !journey.journeyTwin || journey.journeyTwin.length === 0) return null;
+  if (!journey || !journey.routes || journey.routes.length === 0) return null;
+
+  const selectedRoute = journey.routes.find(r => r.id === journey.selectedRouteId) || journey.routes[0];
+  const weatherSegments = selectedRoute.weatherSegments || [];
+  
+  if (weatherSegments.length === 0) return null;
+
+  // Dynamically generate the twin timeline based on the selected route's weather segments
+  const activeTwinEvents = weatherSegments.map((ws, i) => {
+    return {
+      id: `${selectedRoute.id}-seg-${i}`,
+      timestamp: ws.segmentStartTime,
+      condition: ws.condition,
+      reason: i === 0 ? 'Origin' : 'En Route'
+    };
+  });
+  
+  // Add the final arrival point based on the last segment's end time
+  const lastSegment = weatherSegments[weatherSegments.length - 1];
+  activeTwinEvents.push({
+    id: `${selectedRoute.id}-arrival`,
+    timestamp: lastSegment.segmentEndTime,
+    condition: lastSegment.condition,
+    reason: 'Destination'
+  });
 
   return (
     <div className="bg-slate-900/90 backdrop-blur-md w-full overflow-x-auto hide-scrollbar">
@@ -41,7 +65,7 @@ export default function JourneyTwin() {
         {/* Connecting line */}
         <div className="absolute top-9 left-12 right-12 h-0.5 bg-slate-600 z-0"></div>
         
-        {journey.journeyTwin.map((point, index) => {
+        {activeTwinEvents.map((point, index) => {
           const date = new Date(point.timestamp);
           const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           const hours = date.getHours();
