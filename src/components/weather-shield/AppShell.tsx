@@ -12,6 +12,9 @@ import MobileBottomSheet from './MobileBottomSheet';
 import { cn } from '@/lib/utils';
 
 
+import LiveNavigationOverlay from './LiveNavigationOverlay';
+import RainImminentPopup from './RainImminentPopup';
+
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
   constructor(props: {children: React.ReactNode}) {
     super(props);
@@ -76,11 +79,13 @@ export default function AppShell() {
     dispatch({ type: 'SET_STATE', payload: 'ANALYZED' });
     setAutoDemoActive(true);
   };
+  
+  const isNavigating = journey.state === 'NAVIGATING';
 
   return (
     <div className="flex flex-col h-[100dvh] bg-slate-950 text-slate-50 overflow-hidden">
         {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 bg-slate-900 border-b border-slate-800">
+      <header className="flex items-center justify-between px-6 py-4 bg-slate-900 border-b border-slate-800 relative z-40">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-600 rounded-lg">
             <CloudRainWind className="w-6 h-6 text-white" />
@@ -113,18 +118,31 @@ export default function AppShell() {
         <main className="absolute inset-0 z-0 bg-slate-950 flex flex-col w-full h-full">
           <ErrorBoundary>
             <MapWorkspace />
+            
+            {/* Live Navigation Overlays */}
+            {isNavigating && (
+              <>
+                <LiveNavigationOverlay />
+                <RainImminentPopup />
+              </>
+            )}
           </ErrorBoundary>
           
           {/* Journey Twin at bottom of map (Desktop Only, since mobile uses the sheet) */}
-          {(journey.state !== 'IDLE' && journey.state !== 'ANALYZING' && journey.journeyTwin && journey.journeyTwin.length > 0) && (
+          {(!isNavigating && journey.state !== 'IDLE' && journey.state !== 'ANALYZING' && journey.routes && journey.routes.length > 0) && (
             <div className="hidden md:block absolute bottom-0 left-[412px] right-0 z-20 pointer-events-auto rounded-tl-xl overflow-hidden shadow-[-10px_0_20px_rgba(0,0,0,0.3)] border-l border-t border-slate-700/50">
               <JourneyTwin />
             </div>
           )}
         </main>
 
-        <DesktopSidebar onPlayDemo={startAutoDemo} />
-        <MobileBottomSheet onPlayDemo={startAutoDemo} />
+        {/* Intelligence Sidebars (Hidden during Live Navigation) */}
+        {!isNavigating && (
+          <>
+            <DesktopSidebar onPlayDemo={startAutoDemo} />
+            <MobileBottomSheet onPlayDemo={startAutoDemo} />
+          </>
+        )}
 
       </div>
 

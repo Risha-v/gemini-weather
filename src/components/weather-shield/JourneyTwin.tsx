@@ -41,23 +41,43 @@ export default function JourneyTwin() {
   if (weatherSegments.length === 0) return null;
 
   // Dynamically generate the twin timeline based on the selected route's weather segments
-  const activeTwinEvents = weatherSegments.map((ws, i) => {
-    return {
-      id: `${selectedRoute.id}-seg-${i}`,
-      timestamp: ws.segmentStartTime,
-      condition: ws.condition,
-      reason: i === 0 ? 'Origin' : 'En Route'
-    };
-  });
-  
-  // Add the final arrival point based on the last segment's end time
-  const lastSegment = weatherSegments[weatherSegments.length - 1];
-  activeTwinEvents.push({
-    id: `${selectedRoute.id}-arrival`,
-    timestamp: lastSegment.segmentEndTime,
-    condition: lastSegment.condition,
-    reason: 'Destination'
-  });
+  const activeTwinEvents: any[] = [];
+  if (weatherSegments.length > 0) {
+    const totalDurationSeconds = selectedRoute.durationSeconds || 0;
+    const totalMinutes = Math.floor(totalDurationSeconds / 60);
+    const startTimestamp = weatherSegments[0].segmentStartTime;
+    
+    // Sample every 10 minutes
+    for (let currentMinute = 0; currentMinute <= totalMinutes; currentMinute += 10) {
+      // Find the segment covering this time slice
+      const currentTimestamp = startTimestamp + (currentMinute * 60000);
+      const currentSegment = weatherSegments.find(ws => 
+        currentTimestamp >= ws.segmentStartTime && currentTimestamp <= ws.segmentEndTime
+      ) || weatherSegments[weatherSegments.length - 1];
+      
+      const isStart = currentMinute === 0;
+      
+      activeTwinEvents.push({
+        id: `${selectedRoute.id}-min-${currentMinute}`,
+        timestamp: currentTimestamp,
+        condition: currentSegment.condition,
+        reason: isStart ? 'Origin' : `En Route` // Changed back to "En Route" for aesthetic consistency
+      });
+    }
+
+    // Always ensure the final destination is added if it didn't land exactly on a 10m boundary
+    if (totalMinutes % 10 !== 0) {
+      const lastSegment = weatherSegments[weatherSegments.length - 1];
+      activeTwinEvents.push({
+        id: `${selectedRoute.id}-arrival`,
+        timestamp: lastSegment.segmentEndTime,
+        condition: lastSegment.condition,
+        reason: 'Destination'
+      });
+    } else if (activeTwinEvents.length > 0) {
+      activeTwinEvents[activeTwinEvents.length - 1].reason = 'Destination';
+    }
+  }
 
   return (
     <div className="bg-slate-900/90 backdrop-blur-md w-full overflow-x-auto hide-scrollbar">
