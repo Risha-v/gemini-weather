@@ -169,9 +169,9 @@ export function PlaceAutocompleteInput({
     <div className="w-full relative" data-role={`${role}-autocomplete`}>
       <div 
         ref={containerRef}
-        className="w-full overflow-visible rounded-lg border border-slate-800 bg-slate-950 focus-within:border-blue-500 transition-colors z-50"
+        className="w-full overflow-visible rounded-lg border border-slate-800 focus-within:border-blue-500 transition-colors z-50"
         style={{
-          '--gmp-place-autocomplete-background-color': 'transparent',
+          '--gmp-place-autocomplete-background-color': '#0f172a', // slate-950
           '--gmp-place-autocomplete-color': 'white',
           '--gmp-place-autocomplete-border': 'none',
           '--gmp-place-autocomplete-padding': '0px',
