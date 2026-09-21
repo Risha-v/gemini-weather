@@ -1,9 +1,17 @@
-import GooglePlacesDiagnostic from "@/components/search/GooglePlacesDiagnostic";
+"use client";
 
-export default function Home() {
+import dynamic from 'next/dynamic';
+import { JourneyProvider } from '@/state/JourneyContext';
+
+const WeatherShieldClient = dynamic(
+  () => import('@/components/weather-shield/WeatherShieldClient'),
+  { ssr: false }
+);
+
+export default function Page() {
   return (
-    <>
-      <GooglePlacesDiagnostic />
-    </>
+    <JourneyProvider>
+      <WeatherShieldClient />
+    </JourneyProvider>
   );
 }

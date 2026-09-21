@@ -13,7 +13,7 @@ import NavigationSteps from './NavigationSteps';
 import { useLiveNavigation } from '@/hooks/useLiveNavigation';
 import { CloudRainWind } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { APIProvider } from '@vis.gl/react-google-maps';
+
 
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
   constructor(props: {children: React.ReactNode}) {
@@ -81,8 +81,7 @@ export default function AppShell() {
   };
 
   return (
-    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''} version="beta" onLoad={() => console.log('Maps API Loaded')}>
-      <div className="flex flex-col h-[100dvh] bg-slate-950 text-slate-50 overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-slate-950 text-slate-50 overflow-hidden">
         {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-slate-900 border-b border-slate-800">
         <div className="flex items-center gap-3">
@@ -180,6 +179,5 @@ export default function AppShell() {
 
         <DemoControls />
       </div>
-    </APIProvider>
   );
 }
