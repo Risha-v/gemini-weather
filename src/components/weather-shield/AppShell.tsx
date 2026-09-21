@@ -131,7 +131,7 @@ export default function AppShell() {
           "absolute top-2 left-2 w-[calc(100vw-16px)] sm:w-[320px] flex-shrink-0 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl flex flex-col max-h-[calc(100dvh-150px)] sm:max-h-[calc(100vh-200px)] z-20 shadow-2xl pointer-events-auto",
           (journey.state === 'IDLE' || journey.state === 'ANALYZING' || !journey.routes || journey.routes.length === 0) ? "overflow-visible" : "overflow-y-auto custom-scrollbar"
         )}>
-          <div className="p-3 flex flex-col gap-3">
+          <div className="p-3 flex flex-col gap-3 [&>*]:shrink-0">
             
             {/* Always show Search/Setup when no route is ready or explicitly requested */}
             {(journey.state === 'IDLE' || journey.state === 'ANALYZING' || !journey.routes || journey.routes.length === 0) ? (
@@ -155,7 +155,7 @@ export default function AppShell() {
                 {journey.state === 'EMERGENCY_MODE' && <EmergencyMode />}
 
                 {/* Normal Intelligence Panel */}
-                <div className={cn("transition-opacity duration-500 flex flex-col gap-3", journey.state === 'EMERGENCY_MODE' ? "opacity-50 pointer-events-none" : "opacity-100")}>
+                <div className={cn("transition-opacity duration-500 flex flex-col gap-3 [&>*]:shrink-0", journey.state === 'EMERGENCY_MODE' ? "opacity-50 pointer-events-none" : "opacity-100")}>
                   <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-700/50 shadow-md">
                     <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex justify-between">
                       <span>Route Forecast</span>
