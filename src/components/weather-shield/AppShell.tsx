@@ -117,7 +117,7 @@ export default function AppShell() {
           
           {/* Journey Twin at bottom of map (Desktop Only, since mobile uses the sheet) */}
           {(journey.state !== 'IDLE' && journey.state !== 'ANALYZING' && journey.journeyTwin && journey.journeyTwin.length > 0) && (
-            <div className="hidden md:block absolute bottom-0 left-0 right-0 z-20 pointer-events-auto">
+            <div className="hidden md:block absolute bottom-0 left-[412px] right-0 z-20 pointer-events-auto rounded-tl-xl overflow-hidden shadow-[-10px_0_20px_rgba(0,0,0,0.3)] border-l border-t border-slate-700/50">
               <JourneyTwin />
             </div>
           )}

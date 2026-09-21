@@ -36,10 +36,10 @@ export default function JourneyTwin() {
   if (!journey || !journey.journeyTwin || journey.journeyTwin.length === 0) return null;
 
   return (
-    <div className="bg-slate-900/90 backdrop-blur-md border-t border-slate-700/50 px-6 py-4">
-      <div className="relative flex justify-between items-start">
+    <div className="bg-slate-900/90 backdrop-blur-md w-full overflow-x-auto hide-scrollbar">
+      <div className="relative flex justify-between items-start min-w-max px-6 py-4 gap-8">
         {/* Connecting line */}
-        <div className="absolute top-5 left-8 right-8 h-0.5 bg-slate-600 z-0"></div>
+        <div className="absolute top-9 left-12 right-12 h-0.5 bg-slate-600 z-0"></div>
         
         {journey.journeyTwin.map((point, index) => {
           const date = new Date(point.timestamp);
