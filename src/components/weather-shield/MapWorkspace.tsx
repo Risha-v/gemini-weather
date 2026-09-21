@@ -27,10 +27,10 @@ export default function MapWorkspace() {
 
   // Auto-pan map to live location when navigating
   React.useEffect(() => {
-    if (journey.state === 'NAVIGATING' && journey.liveLocation && map) {
+    if (journey?.state === 'NAVIGATING' && journey?.liveLocation && map) {
       map.panTo(journey.liveLocation);
     }
-  }, [journey.liveLocation, journey.state, map]);
+  }, [journey?.liveLocation, journey?.state, map]);
 
   const [layers, setLayers] = useState<any>({ traffic: true, rain: false, wind: false, pressure: false });
   const [clickedPos, setClickedPos] = useState<MapCoordinate | null>(null);
