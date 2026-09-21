@@ -127,7 +127,10 @@ export default function AppShell() {
         </main>
 
         {/* Intelligence Panel / Search Sidebar (Now Floating) */}
-        <aside className="absolute top-2 left-2 w-[calc(100vw-16px)] sm:w-[320px] flex-shrink-0 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl flex flex-col max-h-[calc(100dvh-150px)] sm:max-h-[calc(100vh-200px)] overflow-visible z-20 shadow-2xl pointer-events-auto">
+        <aside className={cn(
+          "absolute top-2 left-2 w-[calc(100vw-16px)] sm:w-[320px] flex-shrink-0 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl flex flex-col max-h-[calc(100dvh-150px)] sm:max-h-[calc(100vh-200px)] z-20 shadow-2xl pointer-events-auto",
+          (journey.state === 'IDLE' || journey.state === 'ANALYZING' || !journey.routes || journey.routes.length === 0) ? "overflow-visible" : "overflow-y-auto custom-scrollbar"
+        )}>
           <div className="p-3 flex flex-col gap-3">
             
             {/* Always show Search/Setup when no route is ready or explicitly requested */}
