@@ -1,10 +1,9 @@
-import { JourneyProvider } from '@/state/JourneyContext';
-import AppShell from '@/components/weather-shield/AppShell';
+import GooglePlacesDiagnostic from "@/components/search/GooglePlacesDiagnostic";
 
 export default function Home() {
   return (
-    <JourneyProvider>
-      <AppShell />
-    </JourneyProvider>
+    <>
+      <GooglePlacesDiagnostic />
+    </>
   );
 }

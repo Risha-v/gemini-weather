@@ -188,6 +188,16 @@ export default function JourneySetup({ onPlayDemo }: { onPlayDemo?: () => void }
                 <span className="text-amber-500">⚠</span> Select a place from the suggestions
               </div>
             )}
+            {journey.origin.status === 'selected' && journey.origin.source === 'geolocation' && journey.origin.address && (
+              <div className="mt-1 ml-9 text-xs text-slate-400 font-medium tracking-wide">
+                {journey.origin.address}
+              </div>
+            )}
+            {journey.origin.status === 'error' && (
+              <div className="mt-1 ml-9 text-xs text-amber-500 font-medium flex items-center gap-1">
+                <span className="text-[10px]">⚠️</span> Select a place from the suggestions
+              </div>
+            )}
             {journey.origin.status === 'selected' && (
               <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1 px-1">
                 ✓ Location selected
