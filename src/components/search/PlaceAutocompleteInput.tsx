@@ -23,112 +23,160 @@ export function PlaceAutocompleteInput({
   onPlaceError,
   placeholder
 }: PlaceAutocompleteInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const map = useMap();
   const places = useMapsLibrary('places');
-  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [autocompleteElement, setAutocompleteElement] = useState<any>(null);
 
-  // Initialize traditional Autocomplete widget
+  // Initialize the singleton autocomplete element
   useEffect(() => {
-    if (!places || !inputRef.current) return;
+    if (!places || !containerRef.current) return;
 
-    const widget = new places.Autocomplete(inputRef.current, {
-      fields: ['place_id', 'geometry', 'name', 'formatted_address'],
+    // Clear any existing children to prevent StrictMode duplicates
+    if (containerRef.current.hasChildNodes()) {
+      containerRef.current.innerHTML = '';
+    }
+
+    const el = new (places as any).PlaceAutocompleteElement({
+      requestedLanguage: 'en',
     });
 
-    setAutocomplete(widget);
+    try { el.placeholder = placeholder; } catch (e) {}
+
+    containerRef.current.appendChild(el);
+    setAutocompleteElement(el);
 
     console.log(`[Weather Shield] ${role.toUpperCase()}_AUTOCOMPLETE_READY`);
 
     return () => {
-      // Cleanup is mostly handled by Google Maps API, but we can clear listeners
-      google.maps.event.clearInstanceListeners(widget);
+      if (containerRef.current && el) {
+        try {
+          containerRef.current.removeChild(el);
+        } catch (e) {}
+      }
     };
-  }, [places, role]);
+  }, [places, placeholder, role]);
 
   // Handle syncing of external values into the widget (e.g. Geolocation)
   useEffect(() => {
-    if (inputRef.current && selectedLocation) {
+    if (autocompleteElement && selectedLocation) {
       if (selectedLocation.source === 'geolocation') {
-        inputRef.current.value = '📍 Your location';
+        autocompleteElement.value = '📍 Your location';
       } else if (selectedLocation.name && selectedLocation.name !== 'Your location') {
-        inputRef.current.value = selectedLocation.name;
+        autocompleteElement.value = selectedLocation.name;
       }
-    } else if (inputRef.current && !selectedLocation) {
-      inputRef.current.value = '';
+    } else if (autocompleteElement && !selectedLocation) {
+      autocompleteElement.value = '';
     }
-  }, [selectedLocation]);
+  }, [autocompleteElement, selectedLocation]);
 
   // Sync locationBias with map center to improve local search relevance
   useEffect(() => {
-    if (!map || !autocomplete) return;
+    if (!map || !autocompleteElement) return;
 
+    // Use map idle event to update bias without thrashing during drag
     const listener = map.addListener('idle', () => {
       const center = map.getCenter();
       if (center) {
-        const circle = new google.maps.Circle({ center: center, radius: 50000 });
-        autocomplete.setBounds(circle.getBounds() as google.maps.LatLngBounds);
+        autocompleteElement.locationBias = {
+          center: center,
+          radius: 50000 // 50km radius for local biasing
+        };
       }
     });
 
     return () => {
       google.maps.event.removeListener(listener);
     };
-  }, [map, autocomplete]);
+  }, [map, autocompleteElement]);
 
   // Event Listeners
   useEffect(() => {
-    if (!autocomplete) return;
+    if (!autocompleteElement) return;
 
-    const listener = autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
+    const handlePlaceSelected = async (event: any) => {
+      const { placePrediction } = event;
       
-      if (!place.geometry || !place.geometry.location) {
-        if (onPlaceError) onPlaceError('The selected place does not have a usable location.');
+      if (!placePrediction) {
         onPlaceSelected(null);
         return;
       }
 
-      console.log(`[Weather Shield] ${role.toUpperCase()}_SELECTED`, place.name);
+      try {
+        const place = placePrediction.toPlace();
+        await place.fetchFields({
+          fields: ['id', 'displayName', 'formattedAddress', 'location', 'viewport']
+        });
 
-      const loc: LocationPoint = {
-        placeId: place.place_id,
-        name: place.name || place.formatted_address || 'Selected location',
-        address: place.formatted_address,
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        source: 'places',
-        status: 'selected'
-      };
+        if (!place.location) {
+          if (onPlaceError) onPlaceError('The selected place does not have a usable location.');
+          return;
+        }
 
-      onPlaceSelected(loc);
+        console.log(`[Weather Shield] ${role.toUpperCase()}_SELECTED`, place.toJSON?.() || {
+          id: place.id,
+          name: place.displayName,
+          address: place.formattedAddress,
+          location: place.location
+        });
 
-      if (place.geometry.viewport && map) {
-        map.fitBounds(place.geometry.viewport);
-      } else if (map) {
-        map.setCenter(place.geometry.location);
-        map.setZoom(15);
+        const loc: LocationPoint = {
+          placeId: place.id || undefined,
+          name: place.displayName || place.formattedAddress || 'Selected location',
+          address: place.formattedAddress || undefined,
+          lat: place.location.lat(),
+          lng: place.location.lng(),
+          source: 'places',
+          status: 'selected'
+        };
+
+        onPlaceSelected(loc);
+
+        if (place.viewport && map) {
+          map.fitBounds(place.viewport);
+        } else if (map) {
+          map.setCenter(place.location);
+          map.setZoom(15);
+        }
+      } catch (e) {
+        console.error(`[Weather Shield] ${role.toUpperCase()}_AUTOCOMPLETE_FIELD_ERROR`, e);
+        if (onPlaceError) onPlaceError('Failed to retrieve location details.');
       }
-    });
+    };
+
+    const handleError = (event: any) => {
+      console.error(`[Weather Shield] ${role.toUpperCase()}_AUTOCOMPLETE_ERROR`, event);
+      if (onPlaceError) onPlaceError('Google location search is temporarily unavailable.');
+    };
+
+    const handleInput = (event: any) => {
+      const value = event.target?.value || '';
+      if (onPlaceTyping) onPlaceTyping(value);
+    };
+
+    autocompleteElement.addEventListener('gmp-select', handlePlaceSelected);
+    autocompleteElement.addEventListener('gmp-error', handleError);
+    autocompleteElement.addEventListener('input', handleInput);
 
     return () => {
-      google.maps.event.removeListener(listener);
+      autocompleteElement.removeEventListener('gmp-select', handlePlaceSelected);
+      autocompleteElement.removeEventListener('gmp-error', handleError);
+      autocompleteElement.removeEventListener('input', handleInput);
     };
-  }, [autocomplete, map, onPlaceError, onPlaceSelected, role]);
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (onPlaceTyping) onPlaceTyping(value);
-  };
+  }, [autocompleteElement, map, onPlaceError, onPlaceSelected, onPlaceTyping, role]);
 
   return (
     <div className="w-full relative" data-role={`${role}-autocomplete`}>
-      <input 
-        ref={inputRef}
-        type="text"
-        placeholder={placeholder}
-        onChange={handleInput}
-        className="w-full rounded-lg border border-slate-700 bg-slate-900/80 text-white px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors shadow-inner"
+      <div 
+        ref={containerRef}
+        className="w-full overflow-visible rounded-lg border border-slate-800 focus-within:border-blue-500 transition-colors z-50"
+        style={{
+          '--gmp-place-autocomplete-background-color': '#0f172a',
+          '--gmp-place-autocomplete-color': 'white',
+          '--gmp-place-autocomplete-border': 'none',
+          '--gmp-place-autocomplete-padding': '0px',
+          colorScheme: 'dark'
+        } as React.CSSProperties}
       />
     </div>
   );
