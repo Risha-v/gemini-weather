@@ -3,15 +3,12 @@
 import React from 'react';
 import { useJourney } from '@/state/JourneyContext';
 import MapWorkspace from './MapWorkspace';
-import RouteComparison from './RouteComparison';
 import JourneyTwin from './JourneyTwin';
-import GeminiDecisionCard from './GeminiDecisionCard';
-import EmergencyMode from './EmergencyMode';
 import DemoControls from './DemoControls';
-import JourneySetup from './JourneySetup';
-import NavigationSteps from './NavigationSteps';
 import { useLiveNavigation } from '@/hooks/useLiveNavigation';
 import { CloudRainWind } from 'lucide-react';
+import DesktopSidebar from './DesktopSidebar';
+import MobileBottomSheet from './MobileBottomSheet';
 import { cn } from '@/lib/utils';
 
 
@@ -118,65 +115,16 @@ export default function AppShell() {
             <MapWorkspace />
           </ErrorBoundary>
           
-          {/* Journey Twin at bottom of map */}
+          {/* Journey Twin at bottom of map (Desktop Only, since mobile uses the sheet) */}
           {(journey.state !== 'IDLE' && journey.state !== 'ANALYZING' && journey.journeyTwin && journey.journeyTwin.length > 0) && (
-            <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-auto">
+            <div className="hidden md:block absolute bottom-0 left-0 right-0 z-20 pointer-events-auto">
               <JourneyTwin />
             </div>
           )}
         </main>
 
-        {/* Intelligence Panel / Search Sidebar (Now Floating) */}
-        <aside className={cn(
-          "absolute top-2 left-2 w-[calc(100vw-16px)] sm:w-[320px] flex-shrink-0 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl flex flex-col max-h-[calc(100dvh-150px)] sm:max-h-[calc(100vh-200px)] z-20 shadow-2xl pointer-events-auto",
-          (journey.state === 'IDLE' || journey.state === 'ANALYZING' || !journey.routes || journey.routes.length === 0) ? "overflow-visible" : "overflow-y-auto custom-scrollbar"
-        )}>
-          <div className="p-3 flex flex-col gap-3 [&>*]:shrink-0">
-            
-            {/* Always show Search/Setup when no route is ready or explicitly requested */}
-            {(journey.state === 'IDLE' || journey.state === 'ANALYZING' || !journey.routes || journey.routes.length === 0) ? (
-              <JourneySetup onPlayDemo={startAutoDemo} />
-            ) : (
-              <>
-                {/* Journey Setup Summary */}
-                <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 cursor-pointer hover:bg-slate-800/70 transition-colors" onClick={() => dispatch({ type: 'SET_STATE', payload: 'IDLE' })}>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-400">From</span>
-                    <span className="font-semibold text-xs">{journey.origin.name}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-400">To</span>
-                    <span className="font-semibold text-xs">{journey.destination.name}</span>
-                  </div>
-                  <div className="text-[10px] text-indigo-400 text-center mt-1">Tap to edit journey</div>
-                </div>
-
-                {/* Emergency Banner */}
-                {journey.state === 'EMERGENCY_MODE' && <EmergencyMode />}
-
-                {/* Normal Intelligence Panel */}
-                <div className={cn("transition-opacity duration-500 flex flex-col gap-3 [&>*]:shrink-0", journey.state === 'EMERGENCY_MODE' ? "opacity-50 pointer-events-none" : "opacity-100")}>
-                  <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-700/50 shadow-md">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex justify-between">
-                      <span>Route Forecast</span>
-                      <span className="text-[10px] text-indigo-400 capitalize">Conditions may change</span>
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <CloudRainWind className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                      <p className="text-sm font-medium text-slate-200">
-                        {journey.routes[0]?.exposure?.earliestMeaningfulWeatherEvent || 'Clear conditions expected.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <GeminiDecisionCard />
-                  <RouteComparison />
-                  <NavigationSteps />
-                </div>
-              </>
-            )}
-          </div>
-        </aside>
+        <DesktopSidebar onPlayDemo={startAutoDemo} />
+        <MobileBottomSheet onPlayDemo={startAutoDemo} />
 
       </div>
 
