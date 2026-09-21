@@ -135,4 +135,12 @@ export interface Journey {
   };
   sourceMode: 'demo' | 'live' | 'hybrid';
   state: JourneyState;
+  liveLocation?: {
+    lat: number;
+    lng: number;
+    speed?: number;
+    heading?: number;
+    timestamp: number;
+  };
+  activeNavigationStepIndex?: number;
 }

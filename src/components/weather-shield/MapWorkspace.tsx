@@ -22,6 +22,16 @@ function isValidMapCoordinate(point: unknown): point is MapCoordinate {
 
 export default function MapWorkspace() {
   const { journey, dispatch } = useJourney();
+  const map = useMap();
+  const [activeRouteId, setActiveRouteId] = React.useState<string | null>(null);
+
+  // Auto-pan map to live location when navigating
+  React.useEffect(() => {
+    if (journey.state === 'NAVIGATING' && journey.liveLocation && map) {
+      map.panTo(journey.liveLocation);
+    }
+  }, [journey.liveLocation, journey.state, map]);
+
   const [layers, setLayers] = useState<any>({ traffic: true, rain: false, wind: false, pressure: false });
   const [clickedPos, setClickedPos] = useState<MapCoordinate | null>(null);
   
@@ -137,21 +147,21 @@ export default function MapWorkspace() {
           />
         )}
 
-        {/* Geolocation pulsing marker */}
-        {validOrigin && journey.origin.source === 'geolocation' && (
-          <AdvancedMarker position={validOrigin}>
+        {/* Geolocation pulsing marker (Live GPS or Initial Setup) */}
+        {((validOrigin && journey.origin.source === 'geolocation') || journey.liveLocation) && (
+          <AdvancedMarker position={journey.liveLocation || validOrigin}>
             <div className="relative group cursor-pointer -translate-y-1/2">
               <div className="absolute inset-0 bg-blue-500 rounded-full blur-sm opacity-40 animate-pulse w-8 h-8 -left-2 -top-2" />
               <div className="relative bg-blue-500 border-2 border-white w-4 h-4 rounded-full shadow-lg" />
               <div className="absolute top-full mt-1 bg-slate-900 border border-slate-700 text-white text-[10px] px-2 py-0.5 rounded shadow whitespace-nowrap">
-                CURRENT LOCATION
+                {journey.state === 'NAVIGATING' ? 'LIVE LOCATION' : 'CURRENT LOCATION'}
               </div>
             </div>
           </AdvancedMarker>
         )}
 
         {/* Normal Origin Marker */}
-        {validOrigin && journey.origin.source !== 'geolocation' && (
+        {validOrigin && journey.origin.source !== 'geolocation' && !journey.liveLocation && (
           <AdvancedMarker position={validOrigin} />
         )}
 

@@ -10,6 +10,7 @@ import EmergencyMode from './EmergencyMode';
 import DemoControls from './DemoControls';
 import JourneySetup from './JourneySetup';
 import NavigationSteps from './NavigationSteps';
+import { useLiveNavigation } from '@/hooks/useLiveNavigation';
 import { CloudRainWind } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APIProvider } from '@vis.gl/react-google-maps';
@@ -35,6 +36,7 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
 
 export default function AppShell() {
   const { journey, dispatch } = useJourney();
+  useLiveNavigation(); // Hook for live GPS tracking
 
   const [autoDemoActive, setAutoDemoActive] = React.useState(false);
 
@@ -80,7 +82,7 @@ export default function AppShell() {
 
   return (
     <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''} onLoad={() => console.log('Maps API Loaded')}>
-      <div className="flex flex-col h-screen bg-slate-950 text-slate-50 overflow-hidden">
+      <div className="flex flex-col h-[100dvh] bg-slate-950 text-slate-50 overflow-hidden">
         {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-slate-900 border-b border-slate-800">
         <div className="flex items-center gap-3">
@@ -89,12 +91,12 @@ export default function AppShell() {
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold tracking-tight">GEMINI WEATHER SHIELD</h1>
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight">GEMINI WEATHER SHIELD</h1>
               <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-900/40 text-indigo-300 border border-indigo-800">
                 CONCEPT PROTOTYPE · FUTURE GOOGLE MAPS EXPERIENCE
               </span>
             </div>
-            <p className="text-sm text-slate-400">Living route intelligence.</p>
+            <p className="text-xs sm:text-sm text-slate-400">Living route intelligence.</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -103,7 +105,7 @@ export default function AppShell() {
               Playing Demo
             </span>
           )}
-          <span className="text-xs px-2 py-1 rounded-full bg-slate-800 text-slate-300 font-medium">
+          <span className="hidden sm:inline-block text-xs px-2 py-1 rounded-full bg-slate-800 text-slate-300 font-medium">
             Demo Simulation
           </span>
         </div>
@@ -126,7 +128,7 @@ export default function AppShell() {
         </main>
 
         {/* Intelligence Panel / Search Sidebar (Now Floating) */}
-        <aside className="absolute top-2 left-2 w-[320px] flex-shrink-0 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl flex flex-col max-h-[calc(100vh-200px)] overflow-y-auto z-20 shadow-2xl pointer-events-auto custom-scrollbar">
+        <aside className="absolute top-2 left-2 w-[calc(100vw-16px)] sm:w-[320px] flex-shrink-0 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl flex flex-col max-h-[calc(100dvh-150px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto z-20 shadow-2xl pointer-events-auto custom-scrollbar">
           <div className="p-3 flex flex-col gap-3">
             
             {/* Always show Search/Setup when no route is ready or explicitly requested */}

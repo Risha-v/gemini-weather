@@ -11,7 +11,9 @@ type Action =
   | { type: 'ADVANCE_TIME'; payload: number } // minutes
   | { type: 'TRIGGER_EMERGENCY'; payload: { stopId: string, reason: string } }
   | { type: 'UPDATE_SETUP'; payload: Partial<Journey> }
-  | { type: 'RESET_DEMO' };
+  | { type: 'RESET_DEMO' }
+  | { type: 'START_NAVIGATION' }
+  | { type: 'UPDATE_LIVE_LOCATION'; payload: { location: { lat: number, lng: number, speed?: number, heading?: number, timestamp: number }, activeStepIndex?: number } };
 
 interface JourneyContextType {
   journey: Journey | null;
@@ -52,6 +54,14 @@ function journeyReducer(state: Journey | null, action: Action): Journey | null {
       };
     case 'RESET_DEMO':
       return { ...demoJourney };
+    case 'START_NAVIGATION':
+      return { ...state!, state: 'NAVIGATING', activeNavigationStepIndex: 0 };
+    case 'UPDATE_LIVE_LOCATION':
+      return { 
+        ...state!, 
+        liveLocation: action.payload.location,
+        activeNavigationStepIndex: action.payload.activeStepIndex !== undefined ? action.payload.activeStepIndex : state!.activeNavigationStepIndex
+      };
     default:
       return state;
   }

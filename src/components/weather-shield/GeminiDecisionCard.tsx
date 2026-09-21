@@ -131,6 +131,25 @@ export default function GeminiDecisionCard() {
         })}
       </div>
 
+          {journey.state !== 'NAVIGATING' && (
+            <button
+              onClick={() => dispatch({ type: 'START_NAVIGATION' })}
+              className="w-full py-2.5 mt-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-emerald-900/50 flex items-center justify-center gap-2 transition-all mb-4"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              Start Live Navigation
+            </button>
+          )}
+          {journey.state === 'NAVIGATING' && (
+            <div className="w-full py-2.5 mt-2 bg-emerald-900/50 text-emerald-400 border border-emerald-800 rounded-lg text-sm font-bold flex items-center justify-center gap-2 mb-4">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              Navigating
+            </div>
+          )}
+
       <button 
         onClick={() => setExpanded(!expanded)}
         className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-medium"
