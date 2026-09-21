@@ -14,7 +14,10 @@ export interface LocationPoint {
   address?: string;
   lat: number;
   lng: number;
-  source: 'places' | 'geolocation' | 'manual' | 'demo';
+  source: 'places' | 'geolocation' | 'manual' | 'demo' | 'map-click';
+  status?: 'empty' | 'typing' | 'selected' | 'error';
+  inputText?: string;
+  accuracyMeters?: number;
 }
 
 export interface JourneyRequest {
@@ -45,6 +48,8 @@ export interface WeatherSegment {
   precipitationMm: number;
   intensity: "none" | "light" | "moderate" | "heavy";
   temperatureC: number;
+  feelsLikeC?: number;
+  humidity?: number;
   windKph: number;
   visibilityKm: number;
   alertSeverity?: string;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleWeatherProvider } from '@/services/googleWeatherProvider';
+import { TomorrowWeatherProvider } from '@/services/tomorrowWeatherProvider';
 import { DemoWeatherProvider } from '@/services/demoProviders';
 
 export async function POST(req: NextRequest) {
@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     const { lat, lng, mode } = await req.json();
 
     const isDemo = mode === 'demo';
-    const weatherProvider = isDemo ? new DemoWeatherProvider() : new GoogleWeatherProvider();
+    const weatherProvider = isDemo ? new DemoWeatherProvider() : new TomorrowWeatherProvider();
 
     const forecast = await weatherProvider.getForecast(lat, lng);
 

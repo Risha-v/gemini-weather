@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useJourney } from '@/state/JourneyContext';
-import { Sparkles, ChevronDown, ChevronUp, Mic, Loader2 } from 'lucide-react';
+import { Sparkles, ChevronDown, ChevronUp, Loader2, Volume2, CloudLightning, Info, ShieldAlert } from 'lucide-react';
 import { demoGeminiRecommendation } from '@/data/demoJourney';
 import { GeminiRecommendation } from '@/domain/recommendation.types';
+import { speakText } from '@/lib/speech';
 
 export default function GeminiDecisionCard() {
-  const { journey } = useJourney();
+  const { journey, dispatch } = useJourney();
   const [expanded, setExpanded] = useState(false);
   const [recommendation, setRecommendation] = useState<GeminiRecommendation>(demoGeminiRecommendation);
   const [loading, setLoading] = useState(false);
@@ -20,10 +21,26 @@ export default function GeminiDecisionCard() {
     const fetchRecommendation = async () => {
       setLoading(true);
       try {
+        // Sanitize payload to prevent massive token usage and 429 quota errors
+        const sanitizedJourney = {
+          ...journey,
+          routes: journey.routes.map(r => ({
+            ...r,
+            path: undefined,
+            legs: undefined,
+            routeLabels: r.routeLabels,
+            distanceMeters: r.distanceMeters,
+            durationSeconds: r.durationSeconds,
+            weatherSegments: r.weatherSegments,
+            exposure: r.exposure
+          })),
+          journeyTwin: undefined
+        };
+
         const res = await fetch('/api/journey/recommendation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ journeyContext: journey })
+          body: JSON.stringify({ journeyContext: sanitizedJourney })
         });
         
         if (res.ok) {
@@ -32,12 +49,14 @@ export default function GeminiDecisionCard() {
             setRecommendation(data.recommendation);
           }
         } else {
-          // Fallback to demo
-          if (isMounted) setRecommendation(demoGeminiRecommendation);
+          if (isMounted) {
+            const errText = await res.text();
+            console.warn("Gemini API warning (handled):", errText);
+            setRecommendation(null as any); // Render error state
+          }
         }
       } catch (err) {
-        // Fallback to demo
-        if (isMounted) setRecommendation(demoGeminiRecommendation);
+        if (isMounted) setRecommendation(null as any);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -51,38 +70,65 @@ export default function GeminiDecisionCard() {
   if (!journey) return null;
 
   return (
-    <div className="bg-gradient-to-br from-indigo-950 to-slate-900 rounded-2xl p-5 border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2 text-indigo-300">
-          <Sparkles className="w-5 h-5" />
-          <span className="font-semibold text-sm">Should I leave now?</span>
+    <div className="bg-gradient-to-br from-indigo-950 to-slate-900 rounded-xl p-3 border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center gap-1.5 text-indigo-300">
+          <Sparkles className="w-4 h-4" />
+          <span className="font-semibold text-xs">Should I leave now?</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {loading && <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />}
-          <div className="flex items-center gap-1 text-slate-400 text-xs bg-slate-900/50 px-2 py-1 rounded-full border border-slate-700">
-            <Mic className="w-3 h-3" />
-            <span>Voice-first</span>
-          </div>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              if (recommendation) {
+                const actionText = recommendation.actions.join('. ');
+                speakText(`Gemini Recommendation: ${recommendation.explanation} Suggested actions: ${actionText}`);
+              }
+            }}
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800/80 hover:bg-indigo-600 border border-slate-700 hover:border-indigo-500 transition-colors"
+            title="Read aloud"
+          >
+            <Volume2 className="w-3 h-3 text-slate-300" />
+            <span className="text-[10px] font-medium text-slate-300">Voice</span>
+          </button>
         </div>
       </div>
       
-      <p className="text-lg leading-snug font-medium text-slate-100 mb-4 transition-opacity duration-300" style={{ opacity: loading ? 0.5 : 1 }}>
-        {recommendation.explanation}
+      <p className="text-sm leading-snug font-medium text-slate-100 mb-2 transition-opacity duration-300" style={{ opacity: loading ? 0.5 : 1 }}>
+        {!recommendation ? (
+          <span className="text-red-400 text-xs">Gemini AI Quota Exceeded. Please wait 1 minute and try again.</span>
+        ) : (
+          recommendation.explanation
+        )}
       </p>
       
-      <div className="flex gap-2 mb-4">
-        {recommendation.actions.map((action, i) => (
-          <button 
-            key={i}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              i === 0 
-                ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' 
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600'
-            }`}
-          >
-            {action}
-          </button>
-        ))}
+      {recommendation && (
+        <>
+          <div className="flex gap-2 mb-4">
+            {recommendation.actions.map((action, i) => {
+          const isRouteSelection = action.toLowerCase().includes('take route');
+          const routeMatch = action.match(/route\s*([a-z])/i);
+          const routeId = routeMatch ? `live-route-${routeMatch[1].toLowerCase().charCodeAt(0) - 97}` : null;
+          
+          return (
+            <button 
+              key={i}
+              onClick={() => {
+                if (isRouteSelection && routeId) {
+                  dispatch({ type: 'SELECT_ROUTE', payload: routeId });
+                }
+              }}
+              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                i === 0 
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' 
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600'
+              }`}
+            >
+              {action}
+            </button>
+          );
+        })}
       </div>
 
       <button 
@@ -121,7 +167,9 @@ export default function GeminiDecisionCard() {
               {recommendation.uncertainty}
             </p>
           </div>
-        </div>
+          </div>
+        )}
+      </>
       )}
     </div>
   );

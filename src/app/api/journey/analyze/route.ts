@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { JourneyRequest, Journey, Route, JourneyTwinEvent } from '@/domain/journey.types';
 import { GoogleMapsRoutingProvider } from '@/services/googleMapsRoutingProvider';
 import { DemoRoutingProvider, DemoWeatherProvider, DemoPlacesProvider, DemoGeminiProvider } from '@/services/demoProviders';
-import { GoogleWeatherProvider } from '@/services/googleWeatherProvider';
+import { TomorrowWeatherProvider } from '@/services/tomorrowWeatherProvider';
 import { calculateRouteExposure } from '@/lib/exposure/exposureEngine';
 
 export async function POST(req: NextRequest) {
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const isDemo = mode === 'demo';
 
     const routingProvider = isDemo ? new DemoRoutingProvider() : new GoogleMapsRoutingProvider();
-    const weatherProvider = isDemo ? new DemoWeatherProvider() : new GoogleWeatherProvider();
+    const weatherProvider = isDemo ? new DemoWeatherProvider() : new TomorrowWeatherProvider();
     const geminiProvider = new DemoGeminiProvider(); // We'll keep Gemini as Demo stub for this specific endpoint until we move it to the real one, or we can use the real one if we want. Wait, let's use the real endpoint from our existing route.
 
     // 1. Compute Routes
@@ -20,24 +20,38 @@ export async function POST(req: NextRequest) {
 
     // 2. Augment with Weather & 3. Calculate Exposure
     const hydratedRoutes = await Promise.all(baseRoutes.map(async (route) => {
-      // In a real implementation, we would sample points along `route.path` and call weatherProvider for each point.
-      // For this prototype, we'll fetch a single forecast for the destination or midpoint as a proxy if it's a live call,
-      // or just use the simulated response from the weatherProvider.
+      // Sample multiple points along the route for weather
+      const samplePoints: [number, number][] = [];
+      const numSamples = Math.min(5, Math.max(2, Math.ceil(route.distanceMeters / 50000))); // Sample every ~50km, min 2, max 5
+      for (let i = 0; i < numSamples; i++) {
+        const idx = Math.floor((i / (numSamples - 1 || 1)) * (route.path.length - 1));
+        samplePoints.push(route.path[idx] || route.path[0]);
+      }
       
-      const midpoint = route.path[Math.floor(route.path.length / 2)];
-      const forecast = await weatherProvider.getForecast(midpoint[0], midpoint[1]);
+      // Fetch weather for sample points
+      const forecasts = await Promise.all(
+        samplePoints.map(p => weatherProvider.getForecast(p[0], p[1]))
+      );
       
-      // Map forecast to WeatherSegments along the route distance
-      // This is highly simplified for the prototype orchestration layer
-      const numSegments = 2;
+      // Create per-km weather segments
+      const numSegments = Math.max(2, Math.ceil(route.distanceMeters / 1000));
       const segmentDistance = route.distanceMeters / numSegments;
       const segmentTime = route.durationSeconds / numSegments;
       const currentTimestamp = Date.now();
+      const avgSpeedKmh = (route.distanceMeters / 1000) / (route.durationSeconds / 3600);
 
       const weatherSegments = Array.from({ length: numSegments }).map((_, i) => {
-        const p = forecast.points ? forecast.points[i % forecast.points.length] : {
-            temperatureC: 25, condition: 'CLEAR', precipitationProbability: 0, precipitationMm: 0, windKph: 10, visibilityKm: 10
+        // Pick the closest forecast point for this segment
+        const forecastIdx = Math.min(forecasts.length - 1, Math.floor((i / numSegments) * forecasts.length));
+        const forecast = forecasts[forecastIdx];
+        const hourOffset = Math.floor((i * segmentTime) / 3600);
+        const p = forecast.points ? forecast.points[hourOffset % forecast.points.length] : {
+          temperatureC: 25, condition: 'CLEAR', precipitationProbability: 0, precipitationMm: 0, windKph: 10, visibilityKm: 10, humidity: 50, feelsLikeC: 27
         };
+        
+        // Calculate location for this km segment along the route
+        const pathIdx = Math.min(route.path.length - 1, Math.floor((i / numSegments) * route.path.length));
+        const segPoint = route.path[pathIdx] || route.path[0];
         
         return {
           routeId: route.id,
@@ -45,12 +59,14 @@ export async function POST(req: NextRequest) {
           segmentEndDistance: (i + 1) * segmentDistance,
           segmentStartTime: currentTimestamp + (i * segmentTime * 1000),
           segmentEndTime: currentTimestamp + ((i + 1) * segmentTime * 1000),
-          location: { lat: midpoint[0], lng: midpoint[1] },
+          location: { lat: segPoint[0], lng: segPoint[1] },
           condition: p.condition,
           precipitationProbability: p.precipitationProbability,
           precipitationMm: p.precipitationMm,
-          intensity: 'none' as const,
+          intensity: p.precipitationMm > 7.5 ? 'heavy' as const : p.precipitationMm > 2.5 ? 'moderate' as const : p.precipitationMm > 0 ? 'light' as const : 'none' as const,
           temperatureC: p.temperatureC,
+          feelsLikeC: p.feelsLikeC || p.temperatureC,
+          humidity: p.humidity || 0,
           windKph: p.windKph,
           visibilityKm: p.visibilityKm,
           source: isDemo ? 'demo' as const : 'live' as const,
@@ -71,6 +87,7 @@ export async function POST(req: NextRequest) {
     const defaultRoute = hydratedRoutes[0];
     const journeyTwin: JourneyTwinEvent[] = [];
     if (defaultRoute) {
+      // Start event
       journeyTwin.push({
         id: `event-start`,
         timestamp: Date.now(),
@@ -80,10 +97,16 @@ export async function POST(req: NextRequest) {
         exposureState: 'Departure',
         reason: 'Origin'
       });
-      // Add midpoints
-      defaultRoute.weatherSegments.forEach((ws, idx) => {
+
+      // Create waypoint events every ~50km
+      const totalKm = defaultRoute.distanceMeters / 1000;
+      const numWaypoints = Math.min(5, Math.max(1, Math.floor(totalKm / 50)));
+      for (let i = 0; i < numWaypoints; i++) {
+        const fraction = (i + 1) / (numWaypoints + 1);
+        const segIdx = Math.min(defaultRoute.weatherSegments.length - 1, Math.floor(fraction * defaultRoute.weatherSegments.length));
+        const ws = defaultRoute.weatherSegments[segIdx];
         journeyTwin.push({
-          id: `event-mid-${idx}`,
+          id: `event-waypoint-${i}`,
           timestamp: ws.segmentStartTime,
           location: ws.location,
           condition: ws.condition,
@@ -91,7 +114,9 @@ export async function POST(req: NextRequest) {
           exposureState: ws.intensity,
           reason: 'En Route'
         });
-      });
+      }
+
+      // End event
       journeyTwin.push({
         id: `event-end`,
         timestamp: Date.now() + defaultRoute.durationSeconds * 1000,

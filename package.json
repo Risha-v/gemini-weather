@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@google/genai": "^2.23.0",
+    "@googlemaps/google-maps-services-js": "^3.4.2",
+    "@googlemaps/polyline-codec": "^1.0.28",
+    "@vis.gl/react-google-maps": "^1.10.0",
     "clsx": "^2.1.1",
     "framer-motion": "^13.4.0",
     "lucide-react": "^1.47.0",

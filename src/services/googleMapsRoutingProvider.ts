@@ -1,5 +1,6 @@
 import { RoutingProvider } from './interfaces';
 import { JourneyRequest, Route, ProviderSource, WeatherSegment, ExposureSummary } from '@/domain/journey.types';
+import { decode } from '@googlemaps/polyline-codec';
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -45,10 +46,11 @@ export class GoogleMapsRoutingProvider implements RoutingProvider {
     }
 
     const decodePolyline = (encoded: string): [number, number][] => {
-      // Simplified polyline decode or just returning an empty array if we don't have a decoder handy
-      // Normally we'd use a polyline library here.
-      // For now, we will return the start and end as a stub, since we are building the orchestration layer.
-      return [[request.origin.lat, request.origin.lng], [request.destination.lat, request.destination.lng]];
+      try {
+        return decode(encoded, 5).map(coord => [coord[0], coord[1]]);
+      } catch (e) {
+        return [[request.origin.lat, request.origin.lng], [request.destination.lat, request.destination.lng]];
+      }
     };
 
     return data.routes.map((r: any, idx: number) => {

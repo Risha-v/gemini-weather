@@ -57,7 +57,22 @@ function journeyReducer(state: Journey | null, action: Action): Journey | null {
   }
 }
 
-const initialJourney: Journey = {
+const isLive = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_MODE !== 'demo';
+
+const initialJourney: Journey = isLive ? {
+  ...demoJourney,
+  journeyId: 'live-' + Date.now(),
+  origin: { name: '', lat: 0, lng: 0, source: 'manual', status: 'empty', inputText: '' },
+  destination: { name: '', lat: 0, lng: 0, source: 'manual', status: 'empty', inputText: '' },
+  routes: [],
+  selectedRouteId: null,
+  journeyTwin: [],
+  recommendation: null,
+  incidents: [],
+  safeStops: [],
+  state: 'IDLE',
+  sourceMode: process.env.NEXT_PUBLIC_APP_MODE as any || 'live'
+} : {
   ...demoJourney,
   state: 'IDLE',
 };
