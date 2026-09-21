@@ -33,15 +33,15 @@ export default function NavigationSteps() {
   }, [activeIndex]);
 
   return (
-    <div className="bg-slate-900/80 rounded-xl p-4 border border-slate-700/50 shadow-md flex flex-col max-h-[300px]">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-indigo-400" />
+    <div className="bg-slate-900/80 rounded-lg p-2.5 border border-slate-700/50 shadow-md flex flex-col max-h-[250px]">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <MapPin className="w-3.5 h-3.5 text-indigo-400" />
           Turn-by-turn Navigation
         </h3>
       </div>
       
-      <div ref={listRef} className="overflow-y-auto pr-2 flex flex-col gap-3 custom-scrollbar">
+      <div ref={listRef} className="overflow-y-auto pr-2 flex flex-col gap-2 custom-scrollbar">
         {steps.map((step: any, index: number) => {
           const instruction = step.navigationInstruction?.instructions || "Continue on route";
           const distance = step.distanceMeters ? `${step.distanceMeters} m` : "";
@@ -53,20 +53,20 @@ export default function NavigationSteps() {
             <div 
               key={index} 
               className={cn(
-                "flex gap-3 p-3 rounded-lg transition-all group",
+                "flex gap-2 p-2 rounded-md transition-all group shrink-0",
                 isActive ? "bg-indigo-900/50 border border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)]" :
                 isPassed ? "bg-slate-800/30 opacity-60" : "bg-slate-800/50 hover:bg-slate-800"
               )}
             >
-              <div className="mt-1">
-                <ArrowUpCircle className={cn("w-5 h-5", isActive ? "text-indigo-400" : "text-slate-500")} />
+              <div className="mt-0.5">
+                <ArrowUpCircle className={cn("w-4 h-4", isActive ? "text-indigo-400" : "text-slate-500")} />
               </div>
               <div className="flex-1">
                 <div 
-                  className={cn("text-sm font-medium", isActive ? "text-white font-bold" : "text-slate-300")} 
+                  className={cn("text-xs font-medium leading-snug", isActive ? "text-white font-bold" : "text-slate-300")} 
                   dangerouslySetInnerHTML={{ __html: instruction }} 
                 />
-                {distance && <div className={cn("text-xs mt-1", isActive ? "text-indigo-300 font-bold" : "text-slate-500")}>{distance}</div>}
+                {distance && <div className={cn("text-[10px] mt-0.5", isActive ? "text-indigo-300 font-bold" : "text-slate-500")}>{distance}</div>}
               </div>
               <button
                 onClick={() => {
@@ -74,12 +74,12 @@ export default function NavigationSteps() {
                   speakText(`In ${distance}, ${textContent}`);
                 }}
                 className={cn(
-                  "p-2 rounded-full transition-colors h-fit group-hover:opacity-100 focus:opacity-100",
+                  "p-1.5 rounded-full transition-colors h-fit group-hover:opacity-100 focus:opacity-100",
                   isActive ? "bg-indigo-600 hover:bg-indigo-500 text-white opacity-100" : "bg-slate-700/50 hover:bg-indigo-600 text-slate-300 hover:text-white opacity-0"
                 )}
                 title="Read step aloud"
               >
-                <Volume2 className="w-4 h-4" />
+                <Volume2 className="w-3.5 h-3.5" />
               </button>
             </div>
           );

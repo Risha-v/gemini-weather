@@ -70,11 +70,11 @@ export default function GeminiDecisionCard() {
   if (!journey) return null;
 
   return (
-    <div className="bg-gradient-to-br from-indigo-950 to-slate-900 rounded-xl p-3 border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
-      <div className="flex justify-between items-center mb-2">
+    <div className="bg-gradient-to-br from-indigo-950 to-slate-900 rounded-lg p-2.5 border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
+      <div className="flex justify-between items-center mb-1.5">
         <div className="flex items-center gap-1.5 text-indigo-300">
-          <Sparkles className="w-4 h-4" />
-          <span className="font-semibold text-xs">Should I leave now?</span>
+          <Sparkles className="w-3.5 h-3.5" />
+          <span className="font-semibold text-[11px]">Should I leave now?</span>
         </div>
         <div className="flex items-center gap-1.5">
           {loading && <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />}
@@ -86,18 +86,18 @@ export default function GeminiDecisionCard() {
                 speakText(`Gemini Recommendation: ${recommendation.explanation} Suggested actions: ${actionText}`);
               }
             }}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800/80 hover:bg-indigo-600 border border-slate-700 hover:border-indigo-500 transition-colors"
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-slate-800/80 hover:bg-indigo-600 border border-slate-700 hover:border-indigo-500 transition-colors"
             title="Read aloud"
           >
             <Volume2 className="w-3 h-3 text-slate-300" />
-            <span className="text-[10px] font-medium text-slate-300">Voice</span>
+            <span className="text-[9px] font-medium text-slate-300">Voice</span>
           </button>
         </div>
       </div>
       
-      <p className="text-sm leading-snug font-medium text-slate-100 mb-2 transition-opacity duration-300" style={{ opacity: loading ? 0.5 : 1 }}>
+      <p className="text-xs leading-tight font-medium text-slate-100 mb-2 transition-opacity duration-300" style={{ opacity: loading ? 0.5 : 1 }}>
         {!recommendation ? (
-          <span className="text-red-400 text-xs">Gemini AI Quota Exceeded. Please wait 1 minute and try again.</span>
+          <span className="text-red-400 text-[10px]">Gemini AI Quota Exceeded. Please wait 1 minute and try again.</span>
         ) : (
           recommendation.explanation
         )}
@@ -105,7 +105,7 @@ export default function GeminiDecisionCard() {
       
       {recommendation && (
         <>
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-3">
             {recommendation.actions.map((action, i) => {
           const isRouteSelection = action.toLowerCase().includes('take route');
           const routeMatch = action.match(/route\s*([a-z])/i);
@@ -119,9 +119,9 @@ export default function GeminiDecisionCard() {
                   dispatch({ type: 'SELECT_ROUTE', payload: routeId });
                 }
               }}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                 i === 0 
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' 
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm' 
                   : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600'
               }`}
             >
@@ -134,17 +134,17 @@ export default function GeminiDecisionCard() {
           {journey.state !== 'NAVIGATING' && (
             <button
               onClick={() => dispatch({ type: 'START_NAVIGATION' })}
-              className="w-full py-2.5 mt-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-emerald-900/50 flex items-center justify-center gap-2 transition-all mb-4"
+              className="w-full py-1.5 mt-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-bold shadow-sm shadow-emerald-900/50 flex items-center justify-center gap-1.5 transition-all mb-3"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
               Start Live Navigation
             </button>
           )}
           {journey.state === 'NAVIGATING' && (
-            <div className="w-full py-2.5 mt-2 bg-emerald-900/50 text-emerald-400 border border-emerald-800 rounded-lg text-sm font-bold flex items-center justify-center gap-2 mb-4">
-              <span className="relative flex h-3 w-3">
+            <div className="w-full py-1.5 mt-1 bg-emerald-900/50 text-emerald-400 border border-emerald-800 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 mb-3">
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </span>
               Navigating
             </div>
